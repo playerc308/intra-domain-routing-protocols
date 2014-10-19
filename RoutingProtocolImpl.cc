@@ -147,7 +147,6 @@ void RoutingProtocolImpl::recv(unsigned short port, void *packet, unsigned short
 			memcpy((char *)packet+32,&router_id,sizeof(unsigned short));
 			sys->send(port,packet,size);
 
-
 			break;
 
 		}
