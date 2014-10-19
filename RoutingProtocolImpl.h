@@ -4,6 +4,7 @@
 #include "RoutingProtocol.h"
 #include "Node.h"
 #include "string.h"
+#include <arpa/inet.h>
 
 const unsigned char ALARM_PING=201;
 const unsigned char ALARM_DV  =202;
@@ -52,7 +53,7 @@ class RoutingProtocolImpl : public RoutingProtocol {
     // a neighbor router.
     void start_ping_pong();
     void check_port_stat();
-    void update_port_stat(unsigned short port_id,unsigned int rtt, unsigned int last_beat);
+    void update_port_stat(unsigned short port_id,unsigned int rtt, unsigned int last_beat,unsigned short n_router_id);
 
  private:
     Node *sys; // To store Node object; used to access GSR9999 interfaces
@@ -64,6 +65,7 @@ class RoutingProtocolImpl : public RoutingProtocol {
         unsigned short port_id;
         unsigned int rtt;
         unsigned int last_beat;
+        unsigned short n_router_id;
         struct port *next;
     };
     struct port port_head;
