@@ -49,7 +49,7 @@ void RoutingProtocolImpl::check_port_stat() {
 
 }
 
-void RoutingProtocolImpl::update_port_stat(unsigned short port_id,unsigned int rtt, unsigned int last_beat) {
+void RoutingProtocolImpl::update_port_stat(unsigned short port_id,unsigned int rtt, unsigned int last_beat,unsigned short n_router_id) {
 	
 	for(struct port *current=port_head.next;current!=NULL;current=current->next)
 	{
@@ -57,6 +57,7 @@ void RoutingProtocolImpl::update_port_stat(unsigned short port_id,unsigned int r
 		{
 			current->rtt=rtt;
 			current->last_beat=last_beat;
+			current->n_router_id=n_router_id;
 		}
 	}
 
@@ -68,27 +69,29 @@ void RoutingProtocolImpl::handle_alarm(void *data) {
 	void *packet;
 	unsigned char packet_type,alarm_event;
 	unsigned int time_send,time_now;
-	unsigned short size;
+	unsigned short size,nrouter_id;
 	memcpy(&alarm_event,data,sizeof(unsigned char));
 
 	switch(alarm_event)
 	{
 		case ALARM_PING:
 		{
-			packet=(void *)malloc(32*3);
-
-			packet_type=PING;
-			memcpy(packet,&packet_type,sizeof(unsigned char));
-
-			size=32*3;
-			memcpy((char *)packet+16,&size,sizeof(unsigned short));
-
-			memcpy((char *)packet+32,&router_id,sizeof(unsigned short));
 
 			for(struct port *current=port_head.next;current!=NULL;current=current->next)
 			{
+				packet=(void *)malloc(32*3);
+
+				packet_type=PING;
+				memcpy(packet,&packet_type,sizeof(unsigned char));
+
+				size=32*3;
+
+				memcpy((char *)packet+16,&size,sizeof(unsigned short));
+				nrouter_id=htons(router_id);
+				memcpy((char *)packet+32,&nrouter_id,sizeof(unsigned short));
 				
-				time_send=sys->time();				
+				time_send=sys->time();
+				time_send=htonl(time_send);
 				memcpy((char *)packet+64,&time_send,sizeof(unsigned int));
 	
 				sys->send(current->port_id,packet,size);
@@ -128,9 +131,9 @@ void RoutingProtocolImpl::handle_alarm(void *data) {
 void RoutingProtocolImpl::recv(unsigned short port, void *packet, unsigned short size) {
   // add your own code
 
-	ePacketType packet_type,newtype;
+	unsigned char packet_type,newtype;
 	unsigned int rtt,time_send,time_now;
-	unsigned short port_id;
+	unsigned short net_router_id;
 	memcpy(&packet_type,packet,sizeof(unsigned char));
 	switch(packet_type)
 	{
@@ -141,11 +144,17 @@ void RoutingProtocolImpl::recv(unsigned short port, void *packet, unsigned short
 		case PING:
 		{
 
+			void *pkt=(void *)malloc(size);
 			newtype=PONG;
-			memcpy(packet,&newtype,sizeof(ePacketType));
-			memcpy((char *)packet+48,(char *)packet+32,sizeof(unsigned short));
-			memcpy((char *)packet+32,&router_id,sizeof(unsigned short));
-			sys->send(port,packet,size);
+			memcpy(pkt,&newtype,sizeof(unsigned char));
+			memcpy((char *)pkt+16,&size,sizeof(unsigned short));
+			net_router_id=htons(router_id);
+			memcpy((char *)pkt+32,&net_router_id,sizeof(unsigned short));
+			memcpy((char *)pkt+48,(char *)packet+32,sizeof(unsigned short));
+			memcpy((char *)pkt+64,(char *)packet+64,sizeof(unsigned int));
+
+			sys->send(port,pkt,size);
+
 
 			break;
 
@@ -155,12 +164,10 @@ void RoutingProtocolImpl::recv(unsigned short port, void *packet, unsigned short
 
 			memcpy(&time_send,(char *)packet+64,sizeof(unsigned int));
 			time_now=sys->time();
-			rtt=time_now-time_send;
-			memcpy(&port_id,(char *)packet+32,sizeof(unsigned short));
-			
-			update_port_stat(port_id,rtt,time_now);
-
-			free(packet);
+			rtt=time_now-ntohl(time_send);
+			memcpy(&net_router_id,(char *)packet+32,sizeof(unsigned short));
+			net_router_id=ntohs(net_router_id);
+			update_port_stat(port,rtt,time_now,net_router_id);
 
 			break;
 
@@ -175,7 +182,8 @@ void RoutingProtocolImpl::recv(unsigned short port, void *packet, unsigned short
 			break;
 
 		}
-	} 
+	}
+	free(packet);
 }
 
 // add more of your own code
