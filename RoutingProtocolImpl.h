@@ -2,6 +2,22 @@
 #define ROUTINGPROTOCOLIMPL_H
 
 #include "RoutingProtocol.h"
+#include "Node.h"
+#include "string.h"
+
+const unsigned char ALARM_PING=201;
+const unsigned char ALARM_DV  =202;
+const unsigned char ALARM_LS  =203;
+const unsigned char ALARM_CHK_PORT_STAT  =204;
+
+const unsigned int DISCONNECTED=1e6;
+const unsigned int UNKNOWN=1e6+1;
+
+const unsigned int PING_PONG_INTVAL=10000;
+const unsigned int CHK_PORT_STAT_INTVAL=1000;
+const unsigned int PING_PONG_TIMEOUT=15000;
+
+
 
 class RoutingProtocolImpl : public RoutingProtocol {
   public:
@@ -34,9 +50,24 @@ class RoutingProtocolImpl : public RoutingProtocol {
     // special port number of SPECIAL_PORT (see global.h) to indicate
     // that the packet is generated locally and not received from 
     // a neighbor router.
+    void start_ping_pong();
+    void check_port_stat();
+    void update_port_stat(unsigned short port_id,unsigned int rtt, unsigned int last_beat);
 
  private:
-    Node *sys; // To store Node object; used to access GSR9999 interfaces 
+    Node *sys; // To store Node object; used to access GSR9999 interfaces
+    unsigned short num_ports; 
+    unsigned short router_id; 
+    eProtocolType protocol_type;
+    struct port
+    {
+        unsigned short port_id;
+        unsigned int rtt;
+        unsigned int last_beat;
+        struct port *next;
+    };
+    struct port port_head;
+
 };
 
 #endif
