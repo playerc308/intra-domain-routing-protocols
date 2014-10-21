@@ -288,7 +288,7 @@ void RoutingProtocolImpl::handle_ls_packet(unsigned short port_id, void* packet,
 
   for (hash_map<unsigned short, Port*>::iterator iter_j = ports.begin(); iter_j != ports.end(); ++iter_j) {
     Port* port = iter_j->second;
-    if (port_id != port->neighbor_id){
+    if (port_id != iter_j->first){
     	  char* packet_f = (char*)malloc(size);
     	  memcpy((char*)packet_f,(char*)packet,size);
     	sys->send(iter_j->first, packet_f, size);
