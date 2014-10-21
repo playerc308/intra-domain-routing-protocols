@@ -86,7 +86,7 @@ class RoutingProtocolImpl : public RoutingProtocol {
     /* router ID and neighbor LS_Entry */
     //hash_map<unsigned short, vector<LS_Entry*>*> ls_table;
     unsigned int sequence_num;
-    unsigned int ls_sequence_num_i[100];
+
     /* router ID and DV_Entry */
     hash_map<unsigned short, DV_Entry*> dv_table;
     /* destination id and forwarding_table_entry */
