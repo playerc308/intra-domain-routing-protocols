@@ -144,7 +144,7 @@ void RoutingProtocolImpl::handle_ls_alarm() {
       int offset = 12 + 4 * count;
       Port* port = iter_j->second;
       *(unsigned short*)((char*)packet + offset) = (unsigned short)htons(port->neighbor_id);
-      *(unsigned short*)((char*)packet + offset + 4) = (unsigned short)htons(port->cost);
+      *(unsigned short*)((char*)packet + offset + 2) = (unsigned short)htons(port->cost);
       count++;
     }
 
@@ -284,6 +284,15 @@ void RoutingProtocolImpl::handle_ls_packet(unsigned short port_id, void* packet,
   }
 
   ls_table[source_id]=ls_vec;
+
+  /*for (hash_map<unsigned short, vector<LS_Entry*>*>::iterator iter_j = ls_table.begin(); iter_j != ls_table.end(); ++iter_j) {
+	  vector<LS_Entry*> *my=iter_j->second;
+	  for(vector<LS_Entry*>::iterator i=my->begin();i!=my->end();i++)
+		  cout<< "Node:"<< iter_j->first << ":"<<(*i)->time_to_expire <<";"<< (*i)->neighbor_id<<";"<< (*i)->cost<<endl;
+
+  }*/
+
+
 
   for (hash_map<unsigned short, Port*>::iterator iter_j = ports.begin(); iter_j != ports.end(); ++iter_j) {
     if (port_id != iter_j->first){
