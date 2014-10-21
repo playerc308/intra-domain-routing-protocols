@@ -56,8 +56,7 @@ void RoutingProtocolImpl::init(unsigned short num_ports, unsigned short router_i
   } else {
     sys->set_alarm(this, DV_DURATION, (void*)&DV_ALARM);
   }
-  for(int i=0;i<100;i++)
-	  ls_sequence_num_i[i]=9999;
+
 }
 
 void RoutingProtocolImpl::handle_alarm(void *data) {
