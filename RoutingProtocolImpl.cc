@@ -262,12 +262,12 @@ void RoutingProtocolImpl::handle_ls_packet(unsigned short port_id, void* packet,
 	unsigned short source_id = (unsigned short)ntohs(*(unsigned short*)((char*)packet + 4));
 
   if(!check_lsp_sequence_num(packet)){
-//    free(packet);
+    free(packet);
     return;
   }
 
   unsigned short pointor=12;
-  vector<LS_Entry*> ls_vec;
+  vector<LS_Entry*> *ls_vec=new vector<LS_Entry*>;
   while(pointor<size){
 
     unsigned short neighbor_id = (unsigned short)ntohs(*(unsigned short*)((char*)packet + pointor));
@@ -279,12 +279,12 @@ void RoutingProtocolImpl::handle_ls_packet(unsigned short port_id, void* packet,
     vec->neighbor_id=neighbor_id;
     vec->cost=cost;
 
-    ls_vec.push_back(vec);
+    ls_vec->push_back(vec);
     pointor=pointor+4;
 
   }
 
-  ls_table[source_id]=&ls_vec;
+  ls_table[source_id]=ls_vec;
 
   for (hash_map<unsigned short, Port*>::iterator iter_j = ports.begin(); iter_j != ports.end(); ++iter_j) {
     Port* port = iter_j->second;
@@ -317,8 +317,10 @@ bool RoutingProtocolImpl::check_lsp_sequence_num(void* packet) {
 //	unsigned short packet_size = (unsigned short)ntohs(*(unsigned short*)((char*)packet + 2));
   unsigned short source_id = (unsigned short)ntohs(*(unsigned short*)((char*)packet + 4));
   unsigned int sequence_num = (unsigned int)ntohl(*(unsigned int*)((char*)packet + 8));
-  if(ls_sequence_num_i[source_id]==9999||ls_sequence_num_i[source_id]<sequence_num/*(ls_sequence_num.find(source_id)==ls_sequence_num.end())*/){
+//  cout<<ls_sequence_num_i[source_id]<<endl;
+  if(ls_sequence_num_i[source_id]==9999||/*(ls_sequence_num.find(source_id)==ls_sequence_num.end())||*/ls_sequence_num_i[source_id]<sequence_num){
 	  ls_sequence_num_i[source_id]=sequence_num;
+//	  cout<<ls_sequence_num_i[source_id]<<endl;
 	  return true;
   }
   else
