@@ -2,23 +2,29 @@
 #define ROUTINGPROTOCOLIMPL_H
 
 #include "RoutingProtocol.h"
-#include "Node.h"
-#include "string.h"
-#include <arpa/inet.h>
 
-const unsigned char ALARM_PING=201;
-const unsigned char ALARM_DV  =202;
-const unsigned char ALARM_LS  =203;
-const unsigned char ALARM_CHK_PORT_STAT  =204;
+struct Port {
+  unsigned short cost;
+  unsigned int time_to_expire;
+  unsigned short neighbor_id;
+};
 
-const unsigned int DISCONNECTED=1e6;
-const unsigned int UNKNOWN=1e6+1;
+struct Forwarding_Table_Entry {
+  unsigned short dest_id;
+  unsigned short next_hop;
+};
 
-const unsigned int PING_PONG_INTVAL=10000;
-const unsigned int CHK_PORT_STAT_INTVAL=1000;
-const unsigned int PING_PONG_TIMEOUT=15000;
+struct LS_Entry {
+  unsigned int time_to_expire;
+  unsigned short neighbor_id;
+  unsigned short cost;
+};
 
-
+struct DV_Entry {
+  unsigned int cost;
+  unsigned int time_to_expire;
+  unsigned short next_hop;
+};
 
 class RoutingProtocolImpl : public RoutingProtocol {
   public:
@@ -49,27 +55,69 @@ class RoutingProtocolImpl : public RoutingProtocol {
     // DATA packet is created at a router by the simulator, your
     // recv() function will be called for such DATA packet, but with a
     // special port number of SPECIAL_PORT (see global.h) to indicate
-    // that the packet is generated locally and not received from 
+    // that the packet is generated locally and not received from
     // a neighbor router.
-    void start_ping_pong();
-    void check_port_stat();
-    void update_port_stat(unsigned short port_id,unsigned int rtt, unsigned int last_beat,unsigned short n_router_id);
 
  private:
-    Node *sys; // To store Node object; used to access GSR9999 interfaces
-    unsigned short num_ports; 
-    unsigned short router_id; 
-    eProtocolType protocol_type;
-    struct port
-    {
-        unsigned short port_id;
-        unsigned int rtt;
-        unsigned int last_beat;
-        unsigned short n_router_id;
-        struct port *next;
-    };
-    struct port port_head;
 
+    /* alarm type */
+    static const char PING_ALARM;
+    static const char LS_ALARM;
+    static const char DV_ALARM;
+    static const char CHECK_ALARM;
+
+    /* PING messages are generated every 10 seconds */
+    static const unsigned int PING_DURATION = 10000;
+    static const unsigned int PONG_TIMEOUT = 15000;
+
+    /* LS updates every 30 seconds */
+    static const unsigned int LS_DURATION = 30000;
+    static const unsigned int LS_TIMEOUT = 45000;
+
+    /* DV updates every 30 secondes */
+    static const unsigned int DV_DURATION = 30000;
+    static const unsigned int DV_TIMEOUT = 45000;
+
+    /* 1-second check */
+    static const unsigned int CHECK_DURATION = 1000;
+
+    /* port ID and Port */
+    hash_map<unsigned short, Port*> ports;
+    /* router ID and neighbor LS_Entry */
+    //hash_map<unsigned short, vector<LS_Entry*>*> ls_table;
+    unsigned int sequence_num;
+    unsigned int ls_sequence_num_i[100];
+    /* router ID and DV_Entry */
+    hash_map<unsigned short, DV_Entry*> dv_table;
+    /* destination id and forwarding_table_entry */
+    hash_map<unsigned short, Forwarding_Table_Entry*> forwarding_table;
+    /* router id and neighbor ls_entry */
+    hash_map<unsigned short, vector<LS_Entry*>*> ls_table;
+    hash_map<unsigned short, unsigned int> ls_sequence_num;
+    Node *sys; // To store Node object; used to access GSR9999 interfaces
+    unsigned short num_ports;
+    unsigned short router_id;
+    eProtocolType protocol_type;
+
+    void handle_ping_alarm();
+    void handle_ls_alarm();
+    void handle_dv_alarm();
+    void handle_check_alarm();
+
+
+    void handle_data_packet();
+    void handle_ping_packet(unsigned short port_id, void* packet, unsigned short size);
+    void handle_pong_packet(unsigned short port_id, void* packet);
+    void handle_ls_packet(unsigned short port_id, void* packet, unsigned short size);
+    void handle_dv_packet();
+
+    bool check_packet_size(void* packet, unsigned short size);
+    bool check_dest_id(void* packet);
+    bool check_lsp_sequence_num(void* packet);
+
+    void update_port_stat();
+    void update_ls_stat();
+    void update_dv_stat();
 };
 
 #endif
