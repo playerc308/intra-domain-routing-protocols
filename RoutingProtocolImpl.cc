@@ -287,7 +287,6 @@ void RoutingProtocolImpl::handle_ls_packet(unsigned short port_id, void* packet,
   ls_table[source_id]=ls_vec;
 
   for (hash_map<unsigned short, Port*>::iterator iter_j = ports.begin(); iter_j != ports.end(); ++iter_j) {
-    Port* port = iter_j->second;
     if (port_id != iter_j->first){
     	  char* packet_f = (char*)malloc(size);
     	  memcpy((char*)packet_f,(char*)packet,size);
@@ -314,13 +313,11 @@ bool RoutingProtocolImpl::check_dest_id(void* packet) {
 }
 
 bool RoutingProtocolImpl::check_lsp_sequence_num(void* packet) {
-//	unsigned short packet_size = (unsigned short)ntohs(*(unsigned short*)((char*)packet + 2));
   unsigned short source_id = (unsigned short)ntohs(*(unsigned short*)((char*)packet + 4));
   unsigned int sequence_num = (unsigned int)ntohl(*(unsigned int*)((char*)packet + 8));
-//  cout<<ls_sequence_num_i[source_id]<<endl;
-  if(ls_sequence_num_i[source_id]==9999||/*(ls_sequence_num.find(source_id)==ls_sequence_num.end())||*/ls_sequence_num_i[source_id]<sequence_num){
-	  ls_sequence_num_i[source_id]=sequence_num;
-//	  cout<<ls_sequence_num_i[source_id]<<endl;
+
+  if((ls_sequence_num.find(source_id)==ls_sequence_num.end())||ls_sequence_num[source_id]<sequence_num){
+	  ls_sequence_num[source_id]=sequence_num;
 	  return true;
   }
   else
