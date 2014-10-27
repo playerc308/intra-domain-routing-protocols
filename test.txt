@@ -9,6 +9,8 @@ Then, we focus on comparing our results with the results provided by the
 simpletest[1,2,3] to exam whether the routing logic of our algorithm is consistent with 
 the samples.
 
-In the third stage, we write a bash script simpletest.sh to generate simpletest files
-which may contain more than 100 nodes to test the robust of our program to find out 
+In the third stage, we write simpletest4 and simpletest5 according to the situations in 
+intrerdoamin_routing.ppt to test the correctness of our LS protocol and the effectiveness 
+of poison reverse. We also write a bash script simpletest.sh to generate simpletest files
+which may contain more than 100 nodes to test the robustness of our program to find out 
 possible memory or performance problems. 
