@@ -1,0 +1,11 @@
+Group member 
+Li Shen (S)
+Jie Zhu (S)
+Peng Chu (S01216798)
+
+In our project, in order to reduce the complexity of class RoutingProtocolImpl, 
+we abstract LS and DV protocol to class LSTable and class DVTable. In each class, 
+it maintains their own data structure, which implemented by hash_map, to store 
+all necessary information such as all other nodes’ link states or routing 
+information. The final routing table is placed in class RoutingProtocolImpl which 
+can be updated by either class LSTable or class DVTable.
